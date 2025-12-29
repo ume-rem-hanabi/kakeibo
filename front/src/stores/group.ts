@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import axios from 'axios'
+import api from '@/plugins/axios'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
 
@@ -57,7 +57,7 @@ export const useGroupStore = defineStore('group', () => {
         error.value = null
         try {
             const token = localStorage.getItem('token')
-            const response = await axios.get(`${API_URL}/groups`, {
+            const response = await api.get(`${API_URL}/groups`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -79,7 +79,7 @@ export const useGroupStore = defineStore('group', () => {
         error.value = null
         try {
             const token = localStorage.getItem('token')
-            const response = await axios.post(
+            const response = await api.post(
                 `${API_URL}/groups`,
                 { name },
                 {
@@ -108,7 +108,7 @@ export const useGroupStore = defineStore('group', () => {
         error.value = null
         try {
             const token = localStorage.getItem('token')
-            const response = await axios.post(
+            const response = await api.post(
                 `${API_URL}/groups/join`,
                 { invitation_code: invitationCode },
                 {
@@ -137,7 +137,7 @@ export const useGroupStore = defineStore('group', () => {
         error.value = null
         try {
             const token = localStorage.getItem('token')
-            await axios.delete(`${API_URL}/groups/${groupId}/leave`, {
+            await api.delete(`${API_URL}/groups/${groupId}/leave`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -164,7 +164,7 @@ export const useGroupStore = defineStore('group', () => {
         error.value = null
         try {
             const token = localStorage.getItem('token')
-            await axios.delete(`${API_URL}/groups/${groupId}`, {
+            await api.delete(`${API_URL}/groups/${groupId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },
@@ -191,7 +191,7 @@ export const useGroupStore = defineStore('group', () => {
         error.value = null
         try {
             const token = localStorage.getItem('token')
-            await axios.delete(`${API_URL}/groups/${groupId}/members/${userId}`, {
+            await api.delete(`${API_URL}/groups/${groupId}/members/${userId}`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

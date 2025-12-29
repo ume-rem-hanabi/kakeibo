@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref } from 'vue'
-import axios from 'axios'
+import api from '@/plugins/axios'
 import type { FixedCost, Category } from '@/types'
 
 const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
@@ -14,7 +14,7 @@ export const useFixedCostStore = defineStore('fixedCost', () => {
     async function fetchFixedCosts() {
         loading.value = true
         try {
-            const response = await axios.get(`${API_URL}/fixed-costs`)
+            const response = await api.get(`${API_URL}/fixed-costs`)
             fixedCosts.value = response.data
         } catch (error) {
             console.error('Failed to fetch fixed costs:', error)
@@ -27,7 +27,7 @@ export const useFixedCostStore = defineStore('fixedCost', () => {
     // カテゴリ一覧取得
     async function fetchCategories() {
         try {
-            const response = await axios.get(`${API_URL}/categories`)
+            const response = await api.get(`${API_URL}/categories`)
             categories.value = response.data
         } catch (error) {
             console.error('Failed to fetch categories:', error)
@@ -39,7 +39,7 @@ export const useFixedCostStore = defineStore('fixedCost', () => {
     async function createFixedCost(data: any) {
         loading.value = true
         try {
-            const response = await axios.post(`${API_URL}/fixed-costs`, data)
+            const response = await api.post(`${API_URL}/fixed-costs`, data)
             fixedCosts.value.unshift(response.data)
             return response.data
         } catch (error) {
@@ -54,7 +54,7 @@ export const useFixedCostStore = defineStore('fixedCost', () => {
     async function updateFixedCost(id: number, data: any) {
         loading.value = true
         try {
-            const response = await axios.put(`${API_URL}/fixed-costs/${id}`, data)
+            const response = await api.put(`${API_URL}/fixed-costs/${id}`, data)
             const index = fixedCosts.value.findIndex(fc => fc.id === id)
             if (index !== -1) {
                 fixedCosts.value[index] = response.data
@@ -72,7 +72,7 @@ export const useFixedCostStore = defineStore('fixedCost', () => {
     async function deleteFixedCost(id: number) {
         loading.value = true
         try {
-            await axios.delete(`${API_URL}/fixed-costs/${id}`)
+            await api.delete(`${API_URL}/fixed-costs/${id}`)
             fixedCosts.value = fixedCosts.value.filter(fc => fc.id !== id)
         } catch (error) {
             console.error('Failed to delete fixed cost:', error)
