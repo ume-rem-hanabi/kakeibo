@@ -43,12 +43,23 @@ const router = createRouter({
 })
 
 // 認証ガード
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
     const authStore = useAuthStore()
 
-    if (to.meta.requiresAuth && !authStore.isAuthenticated) {
-        next('/login')
+    // 認証が必要なページへのアクセス
+    if (to.meta.requiresAuth) {
+        // ユーザー情報がない場合は取得を試みる
+        if (!authStore.user && !authStore.loading) {
+            const success = await authStore.fetchUser()
+            if (!success) {
+                // 認証失敗 → ログイン画面へ
+                next('/login')
+                return
+            }
+        }
+        next()
     } else if (to.path === '/login' && authStore.isAuthenticated) {
+        // ログイン済みでログイン画面にアクセス → ホームへ
         next('/')
     } else {
         next()

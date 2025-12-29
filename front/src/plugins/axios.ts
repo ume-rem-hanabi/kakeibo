@@ -10,14 +10,22 @@ const api = axios.create({
     },
 })
 
+// CSRF トークン取得済みフラグ
+let csrfTokenFetched = false
+
 // リクエストインターセプター（CSRF トークン取得）
 api.interceptors.request.use(
     async (config) => {
-        // 最初のリクエスト時に CSRF トークンを取得
-        if (!document.cookie.includes('XSRF-TOKEN')) {
-            await axios.get('http://localhost:8000/sanctum/csrf-cookie', {
-                withCredentials: true,
-            })
+        // 最初のリクエスト時のみ CSRF トークンを取得
+        if (!csrfTokenFetched) {
+            try {
+                await axios.get('http://localhost:8000/sanctum/csrf-cookie', {
+                    withCredentials: true,
+                })
+                csrfTokenFetched = true
+            } catch (error) {
+                console.error('Failed to fetch CSRF token:', error)
+            }
         }
         return config
     },
@@ -30,10 +38,7 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        if (error.response?.status === 401) {
-            // 未認証エラー → ログイン画面にリダイレクト
-            window.location.href = '/login'
-        }
+        // 401 エラーでも自動リダイレクトしない（router で制御）
         return Promise.reject(error)
     }
 )

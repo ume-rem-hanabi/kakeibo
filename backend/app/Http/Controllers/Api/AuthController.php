@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
@@ -15,7 +16,6 @@ class AuthController extends Controller
     public function redirectToGoogle()
     {
         return Socialite::driver('google')
-            ->stateless()
             ->redirect();
     }
 
@@ -25,9 +25,7 @@ class AuthController extends Controller
     public function handleGoogleCallback()
     {
         try {
-            $googleUser = Socialite::driver('google')
-                ->stateless()
-                ->user();
+            $googleUser = Socialite::driver('google')->user();
 
             // ユーザーを検索または作成
             $user = User::updateOrCreate(
@@ -39,13 +37,14 @@ class AuthController extends Controller
                 ]
             );
 
-            // トークンを生成
-            $token = $user->createToken('auth_token')->plainTextToken;
+            // Laravel Sanctum の Cookie ベース認証でログイン
+            Auth::login($user);
 
-            // フロントエンドにリダイレクト（トークンをクエリパラメータで渡す）
+            // フロントエンドにリダイレクト
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
-            return redirect()->away("{$frontendUrl}/auth/callback?token={$token}");
+            return redirect()->away("{$frontendUrl}/auth/callback");
         } catch (\Exception $e) {
+            \Log::error('Google OAuth failed: ' . $e->getMessage());
             $frontendUrl = env('FRONTEND_URL', 'http://localhost:5173');
             return redirect()->away("{$frontendUrl}/login?error=authentication_failed");
         }
@@ -56,7 +55,7 @@ class AuthController extends Controller
      */
     public function logout(Request $request)
     {
-        $request->user()->currentAccessToken()->delete();
+        Auth::logout();
 
         return response()->json([
             'message' => 'ログアウトしました'

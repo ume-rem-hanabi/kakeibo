@@ -1,58 +1,44 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
-import axios from 'axios'
-
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api'
+import api from '@/plugins/axios'
 
 export const useAuthStore = defineStore('auth', () => {
-    const token = ref<string | null>(localStorage.getItem('auth_token'))
     const user = ref<any>(null)
+    const loading = ref(false)
 
-    const isAuthenticated = computed(() => !!token.value)
-
-    // トークンをセット
-    function setToken(newToken: string) {
-        token.value = newToken
-        localStorage.setItem('auth_token', newToken)
-        axios.defaults.headers.common['Authorization'] = `Bearer ${newToken}`
-    }
+    const isAuthenticated = computed(() => !!user.value)
 
     // ユーザー情報を取得
     async function fetchUser() {
+        loading.value = true
         try {
-            const response = await axios.get(`${API_URL}/user`)
+            const response = await api.get('/user')
             user.value = response.data
+            return true
         } catch (error) {
             console.error('Failed to fetch user:', error)
-            logout()
+            user.value = null
+            return false
+        } finally {
+            loading.value = false
         }
     }
 
     // ログアウト
     async function logout() {
         try {
-            await axios.post(`${API_URL}/logout`)
+            await api.post('/logout')
         } catch (error) {
             console.error('Logout error:', error)
         } finally {
-            token.value = null
             user.value = null
-            localStorage.removeItem('auth_token')
-            delete axios.defaults.headers.common['Authorization']
         }
     }
 
-    // 初期化（トークンがあればユーザー情報取得）
-    if (token.value) {
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token.value}`
-        fetchUser()
-    }
-
     return {
-        token,
         user,
+        loading,
         isAuthenticated,
-        setToken,
         fetchUser,
         logout,
     }
